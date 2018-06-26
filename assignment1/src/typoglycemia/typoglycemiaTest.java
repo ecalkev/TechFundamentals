@@ -8,7 +8,7 @@ import org.junit.Test;
 
 public class typoglycemiaTest {
 	
-	ImprovedEfficiencyTypoglycemia test = new ImprovedEfficiencyTypoglycemia();
+	Typoglycemia test = new Typoglycemia();
 
 	@Test
 	public void testGetSpaces() {

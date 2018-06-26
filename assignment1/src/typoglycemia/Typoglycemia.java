@@ -1,19 +1,24 @@
 package typoglycemia;
- 
-import java.util.ArrayList;
-import java.util.Scanner;
+
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Typoglycemia {
 	
-	public Typoglycemia(){
+	public static void main(String[] args){
+		Typoglycemia jumbler = new Typoglycemia();
+		jumbler.jumbleInputAndPrint();
+	}
+
+	private void jumbleInputAndPrint(){
 		
 		PrintWriter fileOut;
 		String fileName = "output.txt";
@@ -38,7 +43,15 @@ public class Typoglycemia {
 	        String line;
 	        
 			while((line = in.readLine()) != null){
-				printJumble(line, fileOut);
+				if(line.length() > 0){
+					char[] letters = line.toCharArray();
+					letters = jumbleWordsInLine(letters);
+					fileOut.print(letters);
+					fileOut.println("");
+				}
+				else{
+					fileOut.println("");
+				}
 			}
 			in.close();
 			fileOut.close();
@@ -53,103 +66,46 @@ public class Typoglycemia {
 		catch (IOException e){
             System.out.println(e.getMessage());
         }
-		
 	}
 	
-	//method for splitting initial string of text into individual strings for each word
-	//each of the strings consists solely of letters, or no letters
-	//this means only strings with letters will be scrambled (works correctly)
-	public ArrayList<String> textToWords(String string){
-		ArrayList<String> list = new ArrayList<String>();
-		if(string.length() > 0){
-			int firstLetter = 0;
-			boolean lettersFound = true;
-			//if the first letter isn't a letter
-			if(!Character.isLetter(string.charAt(0))){
-				//mark lettersFound as false
-				lettersFound = false;
+	char[] jumbleWordsInLine(char[] letters){
+		ArrayList<Integer> indices = getWordBoundaryIndices(letters);
+		int i = (letters[0] != ' ') ? 0 : 1;
+		while(i + 1 < indices.size()){
+			letters = jumbleWord(letters, indices.get(i), indices.get(i + 1));
+			i = i + 2;
+		}
+		return letters;
+	}
+	
+	ArrayList<Integer> getWordBoundaryIndices(char[] letters){
+		ArrayList<Integer> indices = new ArrayList<>();
+		indices.add(0);
+		boolean isLetter = true;
+		for(int i = 0; i < letters.length; i++){
+			if(isLetter && (letters[i] == ' ')){
+				indices.add(i);
+				isLetter = false;
+			} else if(!isLetter && (letters[i] != ' ')){
+				indices.add(i);
+				isLetter = true;
 			}
-			for(int i = 0; i < string.length(); i++){
-				//if first letter isn't a letter
-				if(!lettersFound){
-					//if the character at i is a letter
-					if(Character.isLetter(string.charAt(i))){
-						//add the substring from firstLetter to i-1 to the list of strings (this is a string of non-letters)
-						list.add(string.substring(firstLetter, i));
-						//marks character at i as a letter and start of next string
-						lettersFound = true;
-						firstLetter = i;
-					}
-				}
-				//if first letter is a letter
-				else{
-					//if the character at i isn't a letter
-					if(!Character.isLetter(string.charAt(i))){
-						//add the substring from firstLetter to i-1 to the list of strings (this is a string of letters not separated by any grammar)
-						list.add(string.substring(firstLetter, i));
-						//marks character at i as a letter and start of next string
-						lettersFound = false;
-						firstLetter = i;
-					}
-				}
-			}	
 		}
-		return list;
+		indices.add(letters.length);
+		return indices;
 	}
 	
-	//randomly jumbles inner letters of each string of letters in the arrayList
-	public ArrayList<String> randomPermute(ArrayList<String> a){
-		int size = a.size();
-		//loops through each string in list
-		for(int i = 0; i < size; i++){
-			//indicates the string is a letter string
-			if(Character.isLetter((a.get(i).charAt(0)))){
-				int length = a.get(i).length();
-				char[] letters = a.get(i).toCharArray();
-				if(length > 3){
-					//loops through each letter in string starting at the second letter
-					for(int j = 1; j < length; j++){
-						//a random number for swapping letter with a letter beyond it in the string
-						int random = j + (int) (Math.random() * (length - j - 1));
-						//remember the letter
-						char b = letters[j];
-						//swaps the two letters based on random number
-						letters[j] = letters[random];
-						letters[random] = b;
-					}
-					a.set(i, String.valueOf(letters));
-				}
-			}	
-		}
-		return a;
-	}
-	
-	//method takes in a string turns and prints the scrambled result to a file
-	public void printJumble(String string, PrintWriter w){
-		//if not an empty line
-		if(string.length() > 0){
-			//creates a list of strings
-			ArrayList<String> words = textToWords(string);
-			words = randomPermute(words);
-			for(int i = 0; i < words.size(); i++){
-				//prints each of the strings
-				w.print(words.get(i));
+	char[] jumbleWord(char[] letters, int start, int end){
+		int length = end - start - 1;
+		if(length > 3){
+			for(int i = start + 1; i < start + length; i++){
+				int random = i + (int) (Math.random() * (end - i - 1));
+				char temp = letters[i];
+				letters[i] = letters[random];
+				letters[random] = temp;
 			}
-			//ensures lines take same format as original document
-			w.println("");
 		}
-		//if an empty line
-		else{
-			//print an empty line
-			w.print("");
-		}
-	}
-
-	public static void main(String[] args) throws IOException {
-		long startTime = System.nanoTime();
-		new Typoglycemia();
-		long endTime = System.nanoTime();
-		System.out.println("Took "+(endTime - startTime) + " ns"); 
+		return letters;
 	}
 
 }
