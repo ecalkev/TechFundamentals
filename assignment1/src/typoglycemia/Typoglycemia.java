@@ -21,7 +21,7 @@ public class Typoglycemia {
 	private void jumbleInputAndPrint(){
 		
 		PrintWriter fileOut;
-		String fileName = "output.txt";
+		String fileName = "TypoglycemiaOutput.txt";
 		String fileInName = "textFile.txt";
 		
 		try{

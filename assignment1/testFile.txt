@@ -1,0 +1,2 @@
+A dog is an animal with 4 legs and a tail.
+A cat is an animal with 4 legs and a tail also.

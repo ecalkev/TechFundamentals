@@ -6,7 +6,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-public class typoglycemiaTest {
+public class TypoglycemiaTest {
 	
 	Typoglycemia test = new Typoglycemia();
 
