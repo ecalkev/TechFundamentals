@@ -1,4 +1,4 @@
-package assignment2;
+package directmappedcache;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,35 +10,41 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Scanner;
 
-public class FullyAssociativeCache {
+public class DirectMappedCache {
 	
-	private CacheNode mostRecentNode;
-	//determines the number of bits for each part of address
+	private int[] tags;
 	private int tagLength;
-	private int numLines;
+	private int indexLength;
 	
-	public FullyAssociativeCache(int totalSizeInKB, int bytesPerCacheLine){
+	public DirectMappedCache(int totalSizeInKB, int bytesPerCacheLine){
 		int totalSize = 1024 * totalSizeInKB;
-		numLines = totalSize/bytesPerCacheLine;
+		int numLines = totalSize/bytesPerCacheLine;
+		tags = new int[numLines];
 		
-		tagLength = 32 - (int) (Math.log(bytesPerCacheLine)/Math.log(2));
+		indexLength = (int) (Math.log(numLines)/Math.log(2));
+		int offsetLength = (int) (Math.log(bytesPerCacheLine)/Math.log(2));
+		tagLength = 32 - indexLength - offsetLength;
 		
-		//creates randomly generated tags for each line of the cache
-		int range = (int) Math.pow(2, tagLength);
-		int tag = (int) (Math.random() * (range));
-		mostRecentNode = new CacheNode(tag, this);
-		for(int i = 1; i < numLines; i++){
-			range = (int) Math.pow(2, tagLength);
-			tag = (int) (Math.random() * (range));
-			mostRecentNode.addFollower(tag);
+		for(int i = 0; i < tags.length; i++){
+			int range = (int) Math.pow(2, tagLength);
+			int tag = (int) (Math.random() * (range));
+			tags[i] = tag;
 		}
 	}
 	
 	public boolean applyAddress(long address){
 		String bits = Long.toBinaryString(address);
+		String indexBits = bits.substring(tagLength, tagLength + indexLength);
+		int index = Integer.parseInt(indexBits, 2);
 		String tagBits = bits.substring(0, tagLength);
 		int tag = Integer.parseInt(tagBits, 2);
-		return mostRecentNode.searchCache(tag);
+		if(tag == tags[index]){
+			return true;
+		}
+		else{
+			tags[index] = tag;
+			return false;
+		}
 	}
 	
 	public void printHits(){
@@ -50,8 +56,10 @@ public class FullyAssociativeCache {
 			Scanner scanner = new Scanner(System.in);
 			System.out.println("Please enter the name of the file containing the addresses you want to check.");
 			fileInName = scanner.nextLine();
+			if(fileInName.isEmpty()) fileInName = "Address.txt";
 			System.out.println("Please enter the name of the file you want to save the results to.");
 			fileName = scanner.nextLine();
+			if(fileName.isEmpty()) fileName = "DirectCacheHits.txt";
 			
 			fileOut = new PrintWriter(fileName);
 			
@@ -62,7 +70,6 @@ public class FullyAssociativeCache {
 	        
 	        String line;
 	        
-			//checks the address on each line for a hit/miss in the cache
 	        while((line = in.readLine()) != null){
 	        	Long address = Long.decode(line);
 				if(applyAddress(address)){
@@ -88,19 +95,11 @@ public class FullyAssociativeCache {
 		
 	}
 
-	public CacheNode getMostRecentNode() {
-		return mostRecentNode;
-	}
-
-	public void setMostRecentNode(CacheNode mostRecentNode) {
-		this.mostRecentNode = mostRecentNode;
-	}
-
 	public static void main(String[] args) {
-		FullyAssociativeCache cache = new FullyAssociativeCache(1, 64);
+		DirectMappedCache cache = new DirectMappedCache(64, 16);
 		
 		cache.printHits();
 
 	}
-	
+
 }
